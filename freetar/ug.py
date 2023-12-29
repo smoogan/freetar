@@ -47,6 +47,7 @@ class SongDetail():
     version: int
     difficulty: str
     capo: str
+    capo_suffix: str
     tuning: str
     tab_url: str
     versions: list[SearchResult] = field(default_factory=list)
@@ -65,6 +66,7 @@ class SongDetail():
         self.fingers_for_strings = []
         if type(data["store"]["page"]["data"]["tab_view"]["meta"]) is dict:
             self.capo = data["store"]["page"]["data"]["tab_view"]["meta"].get("capo")
+            self.capo_suffix = self.get_capo_suffix(self.capo)
             _tuning = data["store"]["page"]["data"]["tab_view"]["meta"].get("tuning")
             self.tuning = f"{_tuning['value']} ({_tuning['name']})" if _tuning else None
         self.tab_url = data["store"]["page"]["data"]["tab"]["tab_url"]
@@ -98,6 +100,23 @@ class SongDetail():
         if chord.group('base') is not None:
             base = '/<span class="chord-base">%s</span>' % chord.group('base')[1:]
         return '<span class="chord">%s</span>' % (root + quality + base)
+
+    def get_capo_suffix(self, capo):
+        if capo is None:
+            return ""
+
+        last_digit = capo % 10
+        if capo >= 11 and capo < 21:
+            return "th"
+        elif last_digit == 1:
+            return "st"
+        elif last_digit == 2:
+            return "nd"
+        elif last_digit == 3:
+            return "rd"
+        else:
+            return "th"
+
 
 def ug_search(value: str):
     resp = requests.get(f"https://www.ultimate-guitar.com/search.php?search_type=title&value={quote(value)}")
