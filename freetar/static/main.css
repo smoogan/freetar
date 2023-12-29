@@ -9,3 +9,7 @@
 .nav li {
   padding-right: 1ch;
 }
+
+.chord {
+  font-weight: bold;
+}

@@ -82,9 +82,22 @@ class SongDetail():
         tab = tab.replace(" ", "&nbsp;")
         tab = tab.replace("[tab]", "")
         tab = tab.replace("[/tab]", "")
-        tab = re.sub(r'\[ch\]([/#\w]+)\[\/ch\]', r'<strong>\1</strong>', tab)
+
+        # (?P<root>[A-Ga-g](#|b)?) : Chord root is any letter A - G with an optional sharp or flat at the end
+        # (?P<quality>[#\w()]+)?  : Chord quality is anything after the root, including parens in the case of 'm(maj7)'
+        # (?P<base>/[A-Ga-g](#|b)?)? :  Chord quality is anything after the root, including parens in the case of 'm(maj7)'
+        tab = re.sub(r'\[ch\](?P<root>[A-Ga-g](#|b)?)(?P<quality>[#\w()]+)?(?P<base>/[A-Ga-g](#|b)?)?\[\/ch\]', self.parse_chord, tab)
         self.tab = tab
 
+    def parse_chord(self, chord):
+        root = '<span class="chord-root">%s</span>' % chord.group('root')
+        quality = ''
+        base = ''
+        if chord.group('quality') is not None:
+            quality = '<span class="chord-quality">%s</span>' % chord.group('quality')
+        if chord.group('base') is not None:
+            base = '/<span class="chord-base">%s</span>' % chord.group('base')[1:]
+        return '<span class="chord">%s</span>' % (root + quality + base)
 
 def ug_search(value: str):
     resp = requests.get(f"https://www.ultimate-guitar.com/search.php?search_type=title&value={quote(value)}")
