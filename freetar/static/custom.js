@@ -44,12 +44,90 @@ $(document).ready(function() {
 
         colorize_favs();
 
+        // TODO: Only if we're on a tab page
+        transpose = getTranspose(window.location.pathname);
+        if (transpose != 0)
+            transposeChords(transpose);
+
         //set dark mode
         dark_mode = JSON.parse(localStorage.getItem("dark_mode")) || false;
         if (dark_mode) {
             document.documentElement.setAttribute('data-bs-theme','dark')
         }
 });
+
+function getTranspose(tabUrl)
+{
+    transposes = JSON.parse(localStorage.getItem("transposes")) || {};
+
+    if (tabUrl in transposes) {
+        semitones = transposes[tabUrl]["semitones"]
+    } else {
+        semitones = 0;
+    }
+
+    return semitones;
+}
+
+function setTranspose(tabUrl, semitones)
+{
+    if (semitones === 0) {
+        delete transposes[tabUrl];
+    } else {
+        var transpose = new Map();
+        transpose["semitones"] = semitones;
+
+        transposes[tabUrl] = transpose;
+    }
+
+    localStorage.setItem("transposes", JSON.stringify(transposes));
+}
+
+function transposeChords(semitones)
+{
+    $('.chord-root, .chord-base').each((i, elem) => {
+        initialRoot = elem.getAttribute('data-initial-root');
+        if (initialRoot === null)
+        {
+            initialRoot = elem.innerHTML;
+            elem.setAttribute('data-initial-root', initialRoot);
+        }
+        elem.innerHTML = transposeChord(initialRoot, semitones);
+    });
+
+    curTranspose = document.getElementById('current-transpose')
+    if (curTranspose !== null)
+        curTranspose.innerHTML = semitones;
+}
+
+// TODO: This changes everything to flat, even if it wouldn't make sense
+function transposeChord(chord, semitones, useFlats = true)
+{
+    if (semitones === 0)
+        return chord;
+
+    flattedRoots = ['A', 'Bb', 'B', 'C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab'];
+    sharpedRoots = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'];
+
+
+    index = flattedRoots.indexOf(chord);
+    if (index === -1)
+        index = sharpedRoots.indexOf(chord);
+
+    if (index === -1)
+    {
+        console.warn("Unable to transpose chord root: " + chord);
+        return chord;
+    }
+
+    newIndex = (index + semitones) % 12
+    if (newIndex < 0)
+        newIndex += 12;
+
+    roots = useFlats ? flattedRoots : sharpedRoots;
+
+    return roots[newIndex];
+}
 
 
 function pageScroll() {
@@ -89,3 +167,22 @@ $('#dark_mode').click(function(){
     }
 });
 
+$('#transpose-down').click(function(){
+    tabUrl = window.location.pathname;
+
+    semitones = getTranspose(tabUrl);
+    semitones--;
+    setTranspose(tabUrl, semitones);
+
+    transposeChords(semitones);
+});
+
+$('#transpose-up').click(function(){
+
+    tabUrl = window.location.pathname;
+    semitones = getTranspose(tabUrl);
+    semitones++;
+    setTranspose(tabUrl, semitones);
+
+    transposeChords(semitones);
+});

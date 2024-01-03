@@ -13,3 +13,7 @@
 .chord {
   font-weight: bold;
 }
+
+.transpose-buttons {
+  margin-left: 5px;
+}
