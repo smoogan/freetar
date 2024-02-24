@@ -76,8 +76,10 @@ class SongDetail():
 
     def fix_tab(self):
         tab = self.tab
-        tab = tab.replace("\r\n", "<br/>")
-        tab = tab.replace(" ", "&nbsp;")
+        tabLines = tab.split("\r\n");
+        tabLines = [line.replace(" ", "&nbsp;") for line in tabLines]
+        tabLines = ["<span class='text-nowrap'>"+line+"</span>" for line in tabLines]
+        tab = "<br/>".join(tabLines)
         tab = tab.replace("[tab]", "")
         tab = tab.replace("[/tab]", "")
         tab = re.sub(r'\[ch\]([/#\w()]+)\[\/ch\]', r'<strong>\1</strong>', tab)
